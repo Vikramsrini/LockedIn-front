@@ -56,7 +56,19 @@ const AIChatbot = () => {
     setIsTyping(true);
 
     try {
-      const studentData = localStorage.getItem('student_data');
+      const studentDataRaw = localStorage.getItem('student_data');
+      const studentData = studentDataRaw ? JSON.parse(studentDataRaw) : {};
+      
+      const enrichedData = {
+        ...studentData,
+        currentTime: new Date().toLocaleString(),
+        currentDay: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+        activities: JSON.parse(localStorage.getItem('local_activities') || '[]'),
+        leetcode_username: localStorage.getItem('leetcode_username') || null,
+        leetcode_stats: JSON.parse(localStorage.getItem('leetcode_stats') || 'null'),
+        quiz_history: JSON.parse(localStorage.getItem('lockedin_dynamic_quizzes') || '[]'),
+        interview_history: JSON.parse(localStorage.getItem('lockedin_mock_interview_history') || '[]')
+      };
 
       // Add a placeholder message for the assistant
       setMessages(prev => [...prev, { role: 'assistant', text: '' }]);
@@ -66,8 +78,8 @@ const AIChatbot = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage.text,
-          context: 'User is on the main Dashboard.',
-          student_data: studentData ? JSON.parse(studentData) : null,
+          context: `User is interacting with the AI Assistant. Page: ${window.location.pathname}`,
+          student_data: enrichedData,
           history: nextMessages.map((entry) => ({
             role: entry.role,
             text: entry.text,

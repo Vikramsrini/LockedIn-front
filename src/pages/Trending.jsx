@@ -43,7 +43,6 @@ const Trending = () => {
           </h1>
           <p className="text-gray-500 mt-2">Latest updates in tech, software, and the job market.</p>
         </div>
-        <div className="text-4xl">🔥</div>
       </div>
 
       {loading && (

@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import LeetCodeStats from '../components/LeetCodeStats';
 import AIChatbot from '../components/AIChatbot';
-import FeatureGrid from '../components/FeatureGrid';
+
 import Activities from './Activities';
 import PlacementPlan from './PlacementPlan';
 import PlacementQuiz from './PlacementQuiz';
@@ -11,6 +11,7 @@ import JobTracker from './JobTracker';
 import Trending from './Trending';
 import Leaderboard from './Leaderboard';
 import StudyRoom from './StudyRoom';
+import MockInterviewer from './MockInterviewer';
 import SmartReminder from '../components/SmartReminder';
 import { 
   LayoutDashboard, 
@@ -23,6 +24,7 @@ import {
   TrendingUp, 
   Trophy, 
   Users, 
+  Mic,
   LogOut 
 } from 'lucide-react';
 
@@ -130,14 +132,7 @@ const DashboardOverview = () => {
         </div>
       </div>
 
-      <div className="mt-8">
-        <FeatureGrid
-          theme="dark"
-          eyebrow="Focus Toolkit"
-          title="Built Into Your Dashboard"
-          description="These features are available directly inside the portal so you can plan, execute, and track progress without switching contexts."
-        />
-      </div>
+
     </div>
   );
 };
@@ -211,6 +206,7 @@ const navItems = [
   { to: '/dashboard/quiz',       icon: <BrainCircuit size={20} strokeWidth={1.5} />, label: 'Placement Quiz' },
   { to: '/dashboard/roadmap',    icon: <Map size={20} strokeWidth={1.5} />, label: 'Job Roadmap' },
   { to: '/dashboard/tracker',    icon: <Briefcase size={20} strokeWidth={1.5} />, label: 'Job Tracker' },
+  { to: '/dashboard/mock-interview', icon: <Mic size={20} strokeWidth={1.5} />, label: 'Mock Interview' },
   { to: '/dashboard/trending',   icon: <TrendingUp size={20} strokeWidth={1.5} />, label: 'Trending' },
   { to: '/dashboard/leaderboard',icon: <Trophy size={20} strokeWidth={1.5} />, label: 'Leaderboard' },
   { to: '/dashboard/study-room', icon: <Users size={20} strokeWidth={1.5} />, label: 'Study Room' },
@@ -295,6 +291,7 @@ const Dashboard = () => {
           <Route path="/quiz" element={<PlacementQuiz />} />
           <Route path="/roadmap" element={<JobRoadmap />} />
           <Route path="/tracker" element={<JobTracker />} />
+          <Route path="/mock-interview" element={<MockInterviewer />} />
           <Route path="/trending" element={<Trending />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
           <Route path="/study-room" element={<StudyRoom />} />

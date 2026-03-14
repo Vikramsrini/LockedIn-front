@@ -1,204 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import axios from 'axios';
+import { apiUrl } from '../services/api';
+import { Sparkles, RefreshCw, BrainCircuit, Code, Database, Globe, Layers } from 'lucide-react';
 
-const QUIZZES = [
-  {
-    id: 1,
-    category: 'Data Structures',
-    title: 'Array and String Basics',
-    difficulty: 'Easy',
-    questions: [
-      {
-        question: 'Which of the following sorting algorithms has the best worst-case time complexity?',
-        options: ['Quick Sort', 'Merge Sort', 'Bubble Sort', 'Insertion Sort'],
-        correct: 1,
-      },
-      {
-        question: 'What is the time complexity of searching for an element in a balanced Binary Search Tree?',
-        options: ['O(1)', 'O(n)', 'O(log n)', 'O(n log n)'],
-        correct: 2,
-      },
-      {
-        question: 'Which data structure follows the LIFO principle?',
-        options: ['Queue', 'Tree', 'Stack', 'Graph'],
-        correct: 2,
-      }
-    ]
-  },
-  {
-    id: 2,
-    category: 'System Design',
-    title: 'Scaling and Databases',
-    difficulty: 'Medium',
-    questions: [
-      {
-        question: 'Which of the following is NOT a benefit of database sharding?',
-        options: ['Improved read/write performance', 'High availability', 'Simplified joins across tables', 'Horizontal scaling'],
-        correct: 2,
-      },
-      {
-        question: 'What is a typical use case for a Redis cache?',
-        options: ['Long-term data warehousing', 'Storing user session data', 'Complex analytical queries', 'Full-text search indexing'],
-        correct: 1,
-      }
-    ]
-  },
-  {
-    id: 3,
-    category: 'CS Fundamentals',
-    title: 'OS and Networks',
-    difficulty: 'Hard',
-    questions: [
-      {
-        question: 'What is the OSI layer responsible for routing?',
-        options: ['Data Link Layer', 'Network Layer', 'Transport Layer', 'Application Layer'],
-        correct: 1,
-      },
-      {
-        question: 'In operating systems, what causes a deadlock?',
-        options: ['Mutual Exclusion', 'Hold and Wait', 'No Preemption', 'All of the above'],
-        correct: 3,
-      }
-    ]
-  },
-  {
-    id: 4,
-    category: 'DBMS',
-    title: 'SQL & Normalization',
-    difficulty: 'Medium',
-    questions: [
-      {
-        question: 'What is the highest normal form among these where transitive dependencies are removed?',
-        options: ['1NF', '2NF', '3NF', 'BCNF'],
-        correct: 2,
-      },
-      {
-        question: 'Which SQL command is used to remove a table entirely from the database structure?',
-        options: ['DELETE', 'TRUNCATE', 'DROP', 'REMOVE'],
-        correct: 2,
-      },
-      {
-        question: 'What property of a transaction guarantees that all operations occur or none do?',
-        options: ['Atomicity', 'Consistency', 'Isolation', 'Durability'],
-        correct: 0,
-      }
-    ]
-  },
-  {
-    id: 5,
-    category: 'Core Concepts',
-    title: 'Object Oriented Programming',
-    difficulty: 'Easy',
-    questions: [
-      {
-        question: 'Which OOP principle is demonstrated by using private variables with public getters and setters?',
-        options: ['Inheritance', 'Polymorphism', 'Encapsulation', 'Abstraction'],
-        correct: 2,
-      },
-      {
-        question: 'What type of inheritance is mathematically impossible to implement directly using classes in Java?',
-        options: ['Single', 'Multilevel', 'Hierarchical', 'Multiple'],
-        correct: 3,
-      },
-      {
-        question: 'What is method overloading an example of?',
-        options: ['Runtime Polymorphism', 'Compile-time Polymorphism', 'Encapsulation', 'Dynamic Binding'],
-        correct: 1,
-      }
-    ]
-  },
-  {
-    id: 6,
-    category: 'Data Structures',
-    title: 'Trees and Graphs',
-    difficulty: 'Hard',
-    questions: [
-      {
-        question: 'Which graph traversal algorithm intrinsically uses a Queue data structure?',
-        options: ['Inorder', 'Preorder', 'Depth First Search (DFS)', 'Breadth First Search (BFS)'],
-        correct: 3,
-      },
-      {
-        question: 'What is the worst-case time complexity of finding a specific node in an unbalanced Binary Search Tree?',
-        options: ['O(log n)', 'O(n)', 'O(n log n)', 'O(1)'],
-        correct: 1,
-      },
-      {
-        question: 'Which algorithm is used to find the shortest path in a graph with negative edge weights?',
-        options: ['Dijkstra', 'Prim', 'Bellman-Ford', 'Kruskal'],
-        correct: 2,
-      }
-    ]
-  },
-  {
-    id: 7,
-    category: 'Aptitude',
-    title: 'Quantitative Ability',
-    difficulty: 'Medium',
-    questions: [
-      {
-        question: 'If a train 100m long passes a pole in 10s, what is its speed?',
-        options: ['10 m/s', '20 m/s', '36 km/hr', 'Both A and C'],
-        correct: 3,
-      },
-      {
-        question: 'Worker A can complete a task in 10 days. Worker B can do it in 15 days. How long if they work together?',
-        options: ['5 days', '6 days', '8 days', '12.5 days'],
-        correct: 1,
-      },
-      {
-        question: 'A shopkeeper sells an item at a 20% profit. If the cost price was $50, what is the selling price?',
-        options: ['$40', '$55', '$60', '$70'],
-        correct: 2,
-      }
-    ]
-  },
-  {
-    id: 8,
-    category: 'System Design',
-    title: 'Microservices & APIs',
-    difficulty: 'Hard',
-    questions: [
-      {
-        question: 'Which architectural pattern is best used to prevent cascading failures in microservices?',
-        options: ['Singleton', 'Circuit Breaker', 'Observer', 'Factory'],
-        correct: 1,
-      },
-      {
-        question: 'Which of the following HTTP methods is considered idempotent?',
-        options: ['POST', 'PATCH', 'GET, PUT, and DELETE', 'OPTIONS and POST'],
-        correct: 2,
-      },
-      {
-        question: 'What is the primary role of an API Gateway?',
-        options: ['Database storage', 'Client-side rendering', 'Routing, rate limiting, and auth', 'Compiling code'],
-        correct: 2,
-      }
-    ]
-  },
-  {
-    id: 9,
-    category: 'Algorithms',
-    title: 'Dynamic Programming',
-    difficulty: 'Hard',
-    questions: [
-      {
-        question: 'How does Dynamic Programming fundamentally differ from Divide and Conquer?',
-        options: ['It uses less memory', 'It solves overlapping subproblems', 'It only works on arrays', 'It avoids recursion completely'],
-        correct: 1,
-      },
-      {
-        question: 'Which of the following problems is best solved using Dynamic Programming?',
-        options: ['Binary Search', '0/1 Knapsack', 'Merge Sort', 'Job Sequencing with Deadlines'],
-        correct: 1,
-      },
-      {
-        question: 'What is the technique called where you solve a DP problem top-down by saving answers to subproblems?',
-        options: ['Tabulation', 'Memoization', 'Iteration', 'Greedy Choice'],
-        correct: 1,
-      }
-    ]
-  }
+const CATEGORIES = [
+  { name: 'Data Structures', icon: <Layers size={18} /> },
+  { name: 'Algorithms', icon: <Code size={18} /> },
+  { name: 'System Design', icon: <Globe size={18} /> },
+  { name: 'DBMS', icon: <Database size={18} /> },
 ];
 
 const PlacementQuiz = () => {
@@ -207,6 +17,31 @@ const PlacementQuiz = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState('Medium');
+  const [dynamicQuizzes, setDynamicQuizzes] = useState(() => {
+    const saved = localStorage.getItem('lockedin_dynamic_quizzes');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lockedin_dynamic_quizzes', JSON.stringify(dynamicQuizzes));
+  }, [dynamicQuizzes]);
+
+  const generateDynamicQuiz = async (category = 'Data Structures') => {
+    setIsGenerating(true);
+    try {
+      const response = await axios.post(apiUrl('/api/quiz/generate'), { category, difficulty: selectedDifficulty });
+      const newQuiz = { ...response.data, id: Date.now(), isAI: true };
+      setDynamicQuizzes(prev => [newQuiz, ...prev].slice(0, 6));
+      return newQuiz;
+    } catch (error) {
+      console.error('Quiz generation failed', error);
+      alert('Failed to generate AI quiz. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const startQuiz = (quiz) => {
     setActiveQuiz(quiz);
@@ -244,20 +79,92 @@ const PlacementQuiz = () => {
       <p className="text-gray-400 mb-8 font-medium">Test your knowledge across CS fundamentals, DSA, and System Design.</p>
 
       {!activeQuiz ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {QUIZZES.map((quiz) => (
-            <div key={quiz.id} className="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 border border-white/10 group cursor-pointer" onClick={() => startQuiz(quiz)}>
-              <span className={`text-xs font-bold px-3 py-1 rounded-full ${getDifficultyColor(quiz.difficulty)} mb-4 inline-block`}>
-                {quiz.difficulty}
-              </span>
-              <h3 className="text-xl font-bold text-gray-200 mb-2 group-hover:text-red-600 transition-colors">{quiz.title}</h3>
-              <p className="text-sm text-gray-500 mb-4">{quiz.category}</p>
-              <div className="flex items-center justify-between text-sm font-medium text-gray-400">
-                <span>{quiz.questions.length} Questions</span>
-                <span className="text-blue-500 group-hover:translate-x-1 transition-transform">Start →</span>
-              </div>
+        <div className="space-y-8">
+          {/* AI Generator Section */}
+          <div className="glass-panel border border-red-500/20 bg-red-500/5 rounded-3xl p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+              <Sparkles size={120} className="text-red-500" />
             </div>
-          ))}
+            <div className="relative z-10">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Sparkles size={20} className="text-red-400" /> AI Quiz Generator
+              </h2>
+              <div className="flex flex-col sm:flex-row items-center gap-4 mb-6">
+                <div className="flex-1 w-full">
+                  <p className="text-gray-400 text-sm mt-1 mb-4">Select topic and difficulty to generate a unique quiz using Llama LLM.</p>
+                  <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-2 w-fit mb-4">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Difficulty:</span>
+                    <select 
+                      value={selectedDifficulty}
+                      onChange={(e) => setSelectedDifficulty(e.target.value)}
+                      className="bg-transparent text-red-400 text-sm font-bold focus:outline-none cursor-pointer"
+                    >
+                      <option value="Easy" className="bg-[#0b0b12]">Easy</option>
+                      <option value="Medium" className="bg-[#0b0b12]">Medium</option>
+                      <option value="Hard" className="bg-[#0b0b12]">Hard</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {CATEGORIES.map(cat => (
+                  <button
+                    key={cat.name}
+                    onClick={() => generateDynamicQuiz(cat.name)}
+                    disabled={isGenerating}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400 transition-all font-medium text-sm disabled:opacity-50"
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </div>
+              
+              {isGenerating && (
+                <div className="mt-6 flex items-center gap-3 text-red-400 font-bold animate-pulse">
+                  <RefreshCw className="animate-spin" size={18} />
+                  <span>Llama is conceptualizing your questions...</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">Recommended Quizzes</h2>
+              <button 
+                onClick={() => setDynamicQuizzes([])}
+                className="text-sm text-gray-500 hover:text-red-400 flex items-center gap-1 transition-colors"
+              >
+                <RefreshCw size={14} /> Reset List
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dynamicQuizzes.length > 0 ? dynamicQuizzes.map((quiz) => (
+                <div key={quiz.id} className="bg-white/5 rounded-2xl p-6 hover:bg-white/10 transition-all duration-300 border border-white/10 group cursor-pointer relative" onClick={() => startQuiz(quiz)}>
+                  {quiz.isAI && (
+                    <span className="absolute top-4 right-4 text-red-500/40 group-hover:text-red-500/80 transition-colors">
+                      <Sparkles size={16} />
+                    </span>
+                  )}
+                  <span className={`text-xs font-bold px-3 py-1 rounded-full ${getDifficultyColor(quiz.difficulty)} mb-4 inline-block`}>
+                    {quiz.difficulty}
+                  </span>
+                  <h3 className="text-xl font-bold text-gray-200 mb-2 group-hover:text-red-500 transition-colors">{quiz.title}</h3>
+                  <p className="text-sm text-gray-500 mb-4">{quiz.category}</p>
+                  <div className="flex items-center justify-between text-sm font-medium text-gray-400">
+                    <span>{quiz.questions.length} Questions</span>
+                    <span className="text-red-500 group-hover:translate-x-1 transition-transform">Start →</span>
+                  </div>
+                </div>
+              )) : (
+                <div className="col-span-full py-12 text-center bg-white/5 border border-dashed border-white/10 rounded-2xl">
+                  <p className="text-gray-500">No quizzes generated yet. Use the generator above to start!</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       ) : showResults ? (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 rounded-2xl p-10 text-center max-w-xl mx-auto border border-white/10 relative overflow-hidden">

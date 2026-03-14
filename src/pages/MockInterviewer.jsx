@@ -11,6 +11,7 @@ import {
   Sparkles,
   Square,
   Volume2,
+  Upload,
 } from 'lucide-react';
 import { apiUrl } from '../services/api';
 
@@ -83,6 +84,10 @@ const MockInterviewer = () => {
   const [transcript, setTranscript] = React.useState([]);
   const [currentFeedback, setCurrentFeedback] = React.useState(null);
   const [summary, setSummary] = React.useState(null);
+  const [resumeText, setResumeText] = React.useState('');
+  const [anticipatedQuestions, setAnticipatedQuestions] = React.useState([]);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
   const [savedSessions, setSavedSessions] = React.useState(() => readHistory());
   const [speechSupported, setSpeechSupported] = React.useState(false);
   const [voiceActive, setVoiceActive] = React.useState(false);
@@ -197,6 +202,44 @@ const MockInterviewer = () => {
     }
   };
 
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('resume', file);
+    
+    try {
+      const { data } = await axios.post(apiUrl('/api/interview/upload-resume'), formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setResumeText(data.text);
+    } catch (error) {
+      console.error('Upload error', error);
+      alert('Failed to upload and parse resume. Please try a standard PDF.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const generateAnticipatedQuestions = async () => {
+    if (!resumeText) return;
+    setIsGeneratingQuestions(true);
+    try {
+      const { data } = await axios.post(apiUrl('/api/interview/generate-resume-questions'), {
+        resumeText,
+      });
+      if (data && data.questions) {
+        setAnticipatedQuestions(data.questions);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsGeneratingQuestions(false);
+    }
+  };
+
   const startInterview = async () => {
     setIsStarting(true);
     setSummary(null);
@@ -207,7 +250,7 @@ const MockInterviewer = () => {
       const response = await axios.post(apiUrl('/api/interview/start'), {
         mode,
         companyName,
-        student_data: studentDataRef.current,
+        student_data: { ...studentDataRef.current, resumeContext: resumeText },
       });
 
       setIsSessionActive(true);
@@ -235,7 +278,7 @@ const MockInterviewer = () => {
         questionIndex,
         answer,
         history: transcript,
-        student_data: studentDataRef.current,
+        student_data: { ...studentDataRef.current, resumeContext: resumeText },
       });
 
       const nextEntry = {
@@ -277,8 +320,8 @@ const MockInterviewer = () => {
     : 0;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto p-4 md:p-8">
-      <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.9fr] gap-6">
+    <div className="w-full max-w-4xl mx-auto p-4 md:p-8">
+      <div className="flex flex-col gap-6">
         <section className="glass-panel border border-white/10 rounded-3xl overflow-hidden">
           <div className="border-b border-white/10 p-6 bg-gradient-to-r from-white/[0.03] to-transparent">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -323,26 +366,60 @@ const MockInterviewer = () => {
               })}
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-end">
-              <label className="block">
-                <span className="text-sm font-semibold text-gray-300">Target company</span>
-                <input
-                  type="text"
-                  value={companyName}
-                  onChange={(event) => setCompanyName(event.target.value)}
-                  placeholder="Google, Zoho, TCS, Amazon..."
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-gray-100 outline-none focus:border-red-400/40"
-                />
-              </label>
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-4 mt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="block">
+                  <span className="text-sm font-semibold text-gray-300">Target company (Optional)</span>
+                  <input
+                    type="text"
+                    value={companyName}
+                    onChange={(event) => setCompanyName(event.target.value)}
+                    placeholder="Google, Zoho, TCS, Amazon..."
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-gray-100 outline-none focus:border-red-400/40"
+                  />
+                </label>
+                
+                {mode === 'resume' && (
+                  <label className="block">
+                    <span className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                       <Sparkles size={16}/> Upload Resume (PDF)
+                    </span>
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="relative flex-1">
+                        <input
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleResumeUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="w-full rounded-2xl border border-dashed border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-emerald-400/70 py-3 flex items-center justify-center gap-2">
+                          <Upload size={18} />
+                          {isUploading ? 'Parsing Resume...' : resumeText ? 'Resume Uploaded ✓' : 'Click to Upload PDF'}
+                        </div>
+                      </div>
+                      {resumeText && (
+                        <button
+                          onClick={generateAnticipatedQuestions}
+                          disabled={isGeneratingQuestions}
+                          className="px-4 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all"
+                        >
+                          {isGeneratingQuestions ? 'Scanning...' : 'Suggest Questions'}
+                        </button>
+                      )}
+                    </div>
+                  </label>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={startInterview}
                   disabled={isStarting}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-red-600 px-8 py-3 font-bold text-white transition-colors hover:bg-red-500 disabled:opacity-60 shadow-[0_4px_12px_rgba(239,68,68,0.3)]"
                 >
                   <PlayCircle size={18} />
-                  {isStarting ? 'Starting...' : 'Start Interview'}
+                  {isStarting ? 'Preparing...' : 'Start Interview'}
                 </button>
                 <button
                   type="button"
@@ -448,84 +525,28 @@ const MockInterviewer = () => {
                 </div>
               </motion.div>
             )}
+
+            {mode === 'resume' && anticipatedQuestions.length > 0 && (
+              <div className="mt-8">
+                <p className="text-xs uppercase tracking-[0.24em] text-emerald-500 flex items-center gap-2 mb-4"><Sparkles size={14} /> Anticipated Questions</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {anticipatedQuestions.map((q, idx) => (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.1 }}
+                      key={idx} 
+                      className="rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4"
+                    >
+                      <p className="text-sm font-semibold text-emerald-400">Question {idx + 1}</p>
+                      <p className="text-sm text-gray-300 mt-1">{q}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
-
-        <aside className="space-y-6">
-          <div className="glass-panel border border-white/10 rounded-3xl p-5">
-            <p className="text-xs uppercase tracking-[0.24em] text-gray-500">Interview stack</p>
-            <h2 className="text-2xl font-bold text-gray-100 mt-2">{selectedMode.label} Mode</h2>
-            <p className="text-gray-400 text-sm mt-2">{selectedMode.description}</p>
-
-            <div className="space-y-3 mt-5">
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-semibold text-gray-200">Speech API</p>
-                <p className="text-sm text-gray-400 mt-1">Using the browser Web Speech API for free live answers and spoken questions.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-semibold text-gray-200">Adaptive rounds</p>
-                <p className="text-sm text-gray-400 mt-1">Backend route scores each response and chooses the next question or ends the session.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <p className="text-sm font-semibold text-gray-200">Memory</p>
-                <p className="text-sm text-gray-400 mt-1">Past session summaries are stored locally for fast demo persistence.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-panel border border-white/10 rounded-3xl p-5">
-            <p className="text-xs uppercase tracking-[0.24em] text-gray-500">Recent sessions</p>
-            <div className="space-y-3 mt-4">
-              {savedSessions.length > 0 ? savedSessions.map((session) => (
-                <div key={`${session.createdAt}-${session.mode}`} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-gray-100">{session.mode}</p>
-                    <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${scoreTone(session.averageScore)}`}>
-                      {session.averageScore}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    {new Date(session.createdAt).toLocaleString()}
-                  </p>
-                  {session.companyName && (
-                    <p className="text-sm text-gray-400 mt-2">Company focus: {session.companyName}</p>
-                  )}
-                  <p className="text-sm text-gray-400 mt-3">{session.nextSteps?.[0]}</p>
-                </div>
-              )) : (
-                <p className="text-sm text-gray-400">No saved sessions yet.</p>
-              )}
-            </div>
-          </div>
-
-          {summary && (
-            <div className="glass-panel border border-white/10 rounded-3xl p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-gray-500">Last summary</p>
-              <h3 className="text-3xl font-black text-gray-100 mt-2">{summary.averageScore}</h3>
-              <p className="text-sm text-gray-400 mt-2">Average interview score</p>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-sm font-semibold text-gray-200">Strengths</p>
-                  <ul className="mt-2 space-y-2 text-sm text-gray-400">
-                    {summary.strengths?.map((item) => <li key={item}>• {item}</li>)}
-                  </ul>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-200">Weaknesses</p>
-                  <ul className="mt-2 space-y-2 text-sm text-gray-400">
-                    {summary.weaknesses?.map((item) => <li key={item}>• {item}</li>)}
-                  </ul>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-200">Next steps</p>
-                  <ul className="mt-2 space-y-2 text-sm text-gray-400">
-                    {summary.nextSteps?.map((item) => <li key={item}>• {item}</li>)}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-        </aside>
       </div>
     </div>
   );

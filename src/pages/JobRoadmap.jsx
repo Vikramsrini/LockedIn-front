@@ -1,76 +1,118 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-// Mock Roadmap Generation Rules
-const generateRoadmap = (jobTitle) => {
-  const title = jobTitle.toLowerCase();
-  
-  if (title.includes('frontend') || title.includes('ui') || title.includes('react')) {
-    return [
-      { id: 1, title: 'Internet Fundamentals', desc: 'How the web works, HTTP/DNS, Browsers', duration: '1 Week', status: 'pending' },
-      { id: 2, title: 'HTML, CSS & JavaScript', desc: 'Semantic HTML, Flexbox/Grid, ES6+, DOM Manipulation', duration: '3 Weeks', status: 'pending' },
-      { id: 3, title: 'Version Control', desc: 'Git, GitHub, Branching strategies', duration: '1 Week', status: 'pending' },
-      { id: 4, title: 'Frontend Framework (React)', desc: 'Components, Hooks, State Management (Redux/Zustand)', duration: '4 Weeks', status: 'pending' },
-      { id: 5, title: 'CSS Architecture & Tools', desc: 'Tailwind CSS, SASS, CSS-in-JS', duration: '2 Weeks', status: 'pending' },
-      { id: 6, title: 'Build Tools & Testing', desc: 'Vite, Webpack, Jest, React Testing Library', duration: '2 Weeks', status: 'pending' },
-      { id: 7, title: 'Web Performance & Security', desc: 'Lighthouse, Core Web Vitals, XSS/CSRF', duration: '1 Week', status: 'pending' },
-    ];
-  }
-  
-  if (title.includes('backend') || title.includes('node') || title.includes('java ') || title.includes('server')) {
-    return [
-      { id: 1, title: 'Internet & OS Basics', desc: 'Networking, Terminal, POSIX basics', duration: '1 Week', status: 'pending' },
-      { id: 2, title: 'Programming Language', desc: 'Deep dive into Python, Java, Go, or Node.js', duration: '3 Weeks', status: 'pending' },
-      { id: 3, title: 'Relational Databases', desc: 'SQL, PostgreSQL/MySQL, Normalization, ACID', duration: '2 Weeks', status: 'pending' },
-      { id: 4, title: 'APIs & Architecture', desc: 'REST, GraphQL, gRPC, Microservices basics', duration: '2 Weeks', status: 'pending' },
-      { id: 5, title: 'NoSQL & Caching', desc: 'MongoDB, Redis, Memcached', duration: '1 Week', status: 'pending' },
-      { id: 6, title: 'Security & Auth', desc: 'OAuth, JWT, Hashing, Web Security', duration: '1 Week', status: 'pending' },
-      { id: 7, title: 'Message Brokers & CI/CD', desc: 'Kafka/RabbitMQ, Docker, GitHub Actions', duration: '2 Weeks', status: 'pending' },
-    ];
-  }
-
-  if (title.includes('data') || title.includes('machine learning') || title.includes('ai')) {
-    return [
-      { id: 1, title: 'Mathematics Foundation', desc: 'Linear Algebra, Calculus, Statistics & Probability', duration: '4 Weeks', status: 'pending' },
-      { id: 2, title: 'Python & Data Libraries', desc: 'Pandas, NumPy, Matplotlib, Scikit-Learn', duration: '3 Weeks', status: 'pending' },
-      { id: 3, title: 'Data Preprocessing', desc: 'Cleaning, Feature Engineering, EDA', duration: '2 Weeks', status: 'pending' },
-      { id: 4, title: 'Classical Machine Learning', desc: 'Regression, Classification, Clustering algorithms', duration: '4 Weeks', status: 'pending' },
-      { id: 5, title: 'Deep Learning Foundation', desc: 'Neural Networks, PyTorch/TensorFlow', duration: '3 Weeks', status: 'pending' },
-      { id: 6, title: 'Specialization (NLP/CV)', desc: 'Transformers, CNNs, HuggingFace', duration: '3 Weeks', status: 'pending' },
-      { id: 7, title: 'MLOps & Deployment', desc: 'Docker, FastAPI, Model Serving', duration: '2 Weeks', status: 'pending' },
-    ];
-  }
-
-  // Default Fallback
-  return [
-    { id: 1, title: 'Core Computer Science', desc: 'Data Structures & Algorithms, OS, Networks', duration: '4 Weeks', status: 'pending' },
-    { id: 2, title: 'Primary Language Mastery', desc: 'Deep understanding of one main language (C++, Java, Python)', duration: '3 Weeks', status: 'pending' },
-    { id: 3, title: 'Version Control & Tools', desc: 'Git, Terminal, IDE Proficiency', duration: '1 Week', status: 'pending' },
-    { id: 4, title: 'Project Development', desc: 'Building a CRUD application end-to-end', duration: '4 Weeks', status: 'pending' },
-    { id: 5, title: 'System Design Basics', desc: 'Scalability, Load Balancing, Databases', duration: '2 Weeks', status: 'pending' },
-    { id: 6, title: 'Interview Preparation', desc: 'LeetCode, Mock Interviews, Resume Building', duration: '3 Weeks', status: 'pending' },
-  ];
-};
+import axios from 'axios';
+import { apiUrl } from '../services/api';
+import { Sparkles, Map, Target, Clock, ArrowRight } from 'lucide-react';
 
 const JobRoadmap = () => {
   const [jobTitle, setJobTitle] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [roadmap, setRoadmap] = useState(null);
+  const [roadmapText, setRoadmapText] = useState('');
   const [currentJob, setCurrentJob] = useState('');
 
-  const handleGenerate = (e) => {
-    e.preventDefault();
+  const handleGenerate = async (e) => {
+    if (e) e.preventDefault();
     if (!jobTitle.trim()) return;
     
     setIsGenerating(true);
     setRoadmap(null);
     setCurrentJob(jobTitle);
 
-    // Simulate API delay for dramatic effect
-    setTimeout(() => {
-      setRoadmap(generateRoadmap(jobTitle));
+    try {
+    const response = await fetch(apiUrl('/api/roadmap/generate'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: jobTitle })
+      });
+
+      if (!response.ok) throw new Error('Stream failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Hold onto partial line
+
+        for (const line of lines) {
+          const cleanLine = line.trim();
+          if (!cleanLine || cleanLine === 'data: [DONE]') continue;
+
+          if (cleanLine.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(cleanLine.slice(6));
+              if (data.content) {
+                fullContent += data.content;
+                // Live update the raw text for immediate feedback
+                setRoadmapText(fullContent); 
+              }
+              if (data.error) throw new Error(data.error);
+            } catch (err) {
+              console.warn('Chunk parse error:', err);
+            }
+          }
+        }
+      }
+
+      // Cleanup JSON (Mistral often wraps in markdown or adds text)
+      let cleaned = fullContent.trim();
+      
+      // Remove Markdown code blocks if present
+      cleaned = cleaned.replace(/```json/g, '').replace(/```/g, '').trim();
+      
+      // Robust array extraction - Find the first [ and the corresponding LAST ]
+      const firstBracket = cleaned.indexOf('[');
+      const lastBracket = cleaned.lastIndexOf(']');
+      
+      if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+        cleaned = cleaned.substring(firstBracket, lastBracket + 1);
+      }
+
+      console.log('Attempting to parse:', cleaned);
+      
+      try {
+        const parsed = JSON.parse(cleaned);
+        const finalRoadmap = Array.isArray(parsed) ? parsed : (parsed.phases || parsed.roadmap || []);
+        if (finalRoadmap.length === 0) throw new Error('No phases found');
+        setRoadmap(finalRoadmap);
+      } catch (parseErr) {
+        console.error('JSON Parse Error:', parseErr, 'Raw Content:', cleaned);
+        
+        // Fallback: Try a less strict regex-based recovery if standard JSON parse fails
+        try {
+          // Look for patterns that look like { "id": ..., "title": ..., "desc": ... }
+          const matches = cleaned.match(/\{[\s\S]*?\}(?=[\s,\]]|$)/g);
+          if (matches && matches.length > 0) {
+            const recovered = matches.map(m => {
+              try { return JSON.parse(m); } catch (e) { return null; }
+            }).filter(x => x && x.title);
+            
+            if (recovered.length > 0) {
+              setRoadmap(recovered);
+              return;
+            }
+          }
+        } catch (recoverErr) {
+          console.error('Recovery failed:', recoverErr);
+        }
+        
+        throw new Error('AI format was unstable. Please try once more with a clearer role name.');
+      }
+
+    } catch (error) {
+      console.error('Roadmap generation failed:', error);
+      alert(error.message || 'Generation failed. Please try again.');
+    } finally {
       setIsGenerating(false);
-    }, 1200);
+      setRoadmapText('');
+    }
   };
 
   return (
@@ -117,6 +159,28 @@ const JobRoadmap = () => {
           ))}
         </div>
       </div>
+
+      {/* Real-time Streaming Content */}
+      <AnimatePresence>
+        {isGenerating && roadmapText && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="mb-8 max-w-2xl mx-auto"
+          >
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md">
+              <div className="flex items-center gap-2 mb-4 text-xs font-bold text-red-400 uppercase tracking-widest">
+                <Sparkles className="w-4 h-4 animate-pulse" />
+                AI Planning in Progress...
+              </div>
+              <div className="text-gray-400 text-sm font-mono leading-relaxed whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
+                {roadmapText}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Roadmap Visualization */}
       <AnimatePresence>
