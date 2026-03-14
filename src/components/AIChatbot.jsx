@@ -140,7 +140,7 @@ const AIChatbot = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 p-4 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all text-white font-bold z-50 group border border-white/5 backdrop-blur-md overflow-hidden"
+          className="fixed bottom-6 right-6 p-4 bg-gradient-to-r from-red-500 via-red-600 to-red-700 rounded-full shadow-[0_0_25px_rgba(239,68,68,0.5)] transition-all text-white font-bold z-50 group border border-white/5 backdrop-blur-md overflow-hidden"
         >
           <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 group-hover:rotate-12 transition-transform duration-300">
@@ -170,14 +170,14 @@ const AIChatbot = () => {
           >
             {/* Header */}
             <div className="bg-black/40 backdrop-blur-md border-b border-white/5 p-5 flex justify-between items-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 z-0"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-red-600/10 z-0"></div>
               <div className="flex items-center gap-3 z-10">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center shadow-inner text-white">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-red-500 to-red-600 flex items-center justify-center shadow-inner text-white">
                   ✨
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-200 text-lg">AI Assistant</h3>
-                  <p className="text-xs text-indigo-600 font-medium flex items-center gap-1">
+                  <p className="text-xs text-red-500 font-medium flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Online
                   </p>
                 </div>
@@ -219,12 +219,12 @@ const AIChatbot = () => {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 flex-shrink-0">
-                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-950 to-black border border-red-500/30 flex items-center justify-center mr-2 flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-red-400" />
                     </div>
                   )}
                   <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.5)] leading-relaxed ${msg.role === 'user'
-                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-indigo-500/20'
+                    ? 'bg-gradient-to-br from-red-600 to-red-700 text-white rounded-br-sm shadow-red-500/20'
                     : 'bg-black/80 backdrop-blur-sm text-gray-200 border border-white/10 rounded-bl-sm'
                     }`}>
                     <ReactMarkdown
@@ -247,7 +247,7 @@ const AIChatbot = () => {
                               </SyntaxHighlighter>
                             </div>
                           ) : (
-                            <code className={`${className} bg-white/10 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-xs`} {...props}>
+                            <code className={`${className} bg-white/10 px-1.5 py-0.5 rounded text-red-400 font-mono text-xs`} {...props}>
                               {children}
                             </code>
                           );
@@ -256,8 +256,8 @@ const AIChatbot = () => {
                         ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
                         ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
                         li: ({ children }) => <li className="mb-1">{children}</li>,
-                        a: ({ children, href }) => <a href={href} className="text-indigo-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
-                        blockquote: ({ children }) => <blockquote className="border-l-4 border-indigo-500 pl-4 italic my-2">{children}</blockquote>
+                        a: ({ children, href }) => <a href={href} className="text-red-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                        blockquote: ({ children }) => <blockquote className="border-l-4 border-red-500 pl-4 italic my-2">{children}</blockquote>
                       }}
                     >
                       {msg.text}
@@ -266,18 +266,18 @@ const AIChatbot = () => {
                 </motion.div>
               ))}
 
-              {isTyping && (
+               {isTyping && (
                 <motion.div
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="flex justify-start items-end"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-red-950 to-black border border-red-500/30 flex items-center justify-center mr-2">
+                    <Sparkles className="w-4 h-4 text-red-400" />
                   </div>
                   <div className="bg-black/80 backdrop-blur-sm text-gray-500 px-4 py-3 rounded-2xl rounded-bl-sm border border-white/10 flex gap-1 items-center h-[44px]">
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></span>
+                    <span className="w-2 h-2 bg-red-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-2 h-2 bg-red-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-2 h-2 bg-red-400 rounded-full animate-bounce"></span>
                   </div>
                 </motion.div>
               )}
@@ -293,12 +293,12 @@ const AIChatbot = () => {
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                   placeholder="Ask me anything..."
-                  className="w-full bg-black/80 border border-white/10 rounded-full pl-5 pr-14 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-gray-300 placeholder-gray-500 font-medium"
+                  className="w-full bg-black/80 border border-white/10 rounded-full pl-5 pr-14 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-red-500/50 transition-all text-gray-300 placeholder-gray-500 font-medium"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || isTyping}
-                  className="absolute right-1.5 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center disabled:opacity-40 disabled:bg-gray-400 hover:bg-indigo-700 hover:scale-105 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.6)] active:scale-95"
+                  className="absolute right-1.5 w-10 h-10 bg-red-600 text-white rounded-full flex items-center justify-center disabled:opacity-40 disabled:bg-gray-400 hover:bg-red-700 hover:scale-105 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.6)] active:scale-95"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-0.5">
                     <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
