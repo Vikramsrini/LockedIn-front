@@ -88,12 +88,12 @@ const JobRoadmap = () => {
             placeholder="e.g. Frontend Engineer, Data Scientist, SDE..."
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
-            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-white placeholder-gray-500"
+            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium text-white placeholder-gray-500"
           />
           <button
             type="submit"
             disabled={isGenerating || !jobTitle.trim()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center min-w-[160px]"
+            className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-red-500/30 flex items-center justify-center min-w-[160px]"
           >
             {isGenerating ? (
               <span className="flex items-center gap-2">
@@ -110,7 +110,7 @@ const JobRoadmap = () => {
             <button
               key={tag}
               onClick={() => setJobTitle(tag)}
-              className="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-1.5 rounded-full font-medium hover:bg-indigo-500/30 transition-colors border border-indigo-500/20"
+              className="text-xs bg-red-500/20 text-red-400 px-3 py-1.5 rounded-full font-medium hover:bg-red-500/30 transition-colors border border-red-500/20"
             >
               {tag}
             </button>
@@ -127,11 +127,11 @@ const JobRoadmap = () => {
             className="relative"
           >
             <div className="text-center mb-10">
-              <h2 className="text-2xl font-bold text-gray-200">Your Path to <span className="text-indigo-600 capitalize">{currentJob}</span></h2>
+              <h2 className="text-2xl font-bold text-gray-200">Your Path to <span className="text-red-500 capitalize">{currentJob}</span></h2>
               <p className="text-gray-500 mt-2">Estimated Time: {roadmap.length * 2} - {roadmap.length * 3} Weeks</p>
             </div>
 
-            <div className="relative border-l-4 border-indigo-500/30 md:border-l-0 md:before:absolute md:before:border-l-4 md:before:border-indigo-500/30 md:before:h-full md:before:left-1/2 md:before:-ml-[2px] ml-4 md:ml-0 space-y-12 pb-12">
+            <div className="relative border-l-4 border-red-500/30 md:border-l-0 md:before:absolute md:before:border-l-4 md:before:border-red-500/30 md:before:h-full md:before:left-1/2 md:before:-ml-[2px] ml-4 md:ml-0 space-y-12 pb-12">
               {roadmap.map((step, index) => (
                 <motion.div 
                   key={step.id}
@@ -141,15 +141,15 @@ const JobRoadmap = () => {
                   className={`relative flex items-center ${index % 2 === 0 ? 'md:flex-row-reverse' : 'md:flex-row'} flex-col md:justify-center w-full clear-both`}
                 >
                   {/* Timeline Dot */}
-                  <div className="absolute left-[-11px] md:left-1/2 md:-ml-[12px] w-6 h-6 rounded-full bg-black border-4 border-indigo-500 z-10"></div>
+                  <div className="absolute left-[-11px] md:left-1/2 md:-ml-[12px] w-6 h-6 rounded-full bg-black border-4 border-red-500 z-10"></div>
 
                   {/* Content Box */}
                   <div className={`w-full md:w-[45%] ml-6 md:ml-0 ${index % 2 === 0 ? 'md:mr-auto md:pr-8 md:text-right' : 'md:ml-auto md:pl-8 text-left'}`}>
                     <div className="p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-white/20 transition-shadow relative group">
-                      <div className={`absolute top-0 ${index % 2 === 0 ? 'right-0 rounded-tr-2xl rounded-bl-2xl' : 'left-0 rounded-tl-2xl rounded-br-2xl'} bg-indigo-500/20 text-indigo-400 px-4 py-1 text-xs font-bold`}>
+                      <div className={`absolute top-0 ${index % 2 === 0 ? 'right-0 rounded-tr-2xl rounded-bl-2xl' : 'left-0 rounded-tl-2xl rounded-br-2xl'} bg-red-500/20 text-red-400 px-4 py-1 text-xs font-bold`}>
                         Phase {index + 1}
                       </div>
-                      <h3 className="text-xl font-bold text-gray-200 mt-4 mb-2 group-hover:text-indigo-600 transition-colors">{step.title}</h3>
+                      <h3 className="text-xl font-bold text-gray-200 mt-4 mb-2 group-hover:text-red-500 transition-colors">{step.title}</h3>
                       <p className="text-gray-400 text-sm mb-4">{step.desc}</p>
                       
                       <div className={`flex items-center gap-4 ${index % 2 === 0 ? 'md:justify-end' : 'justify-start'}`}>
@@ -170,7 +170,7 @@ const JobRoadmap = () => {
               transition={{ delay: roadmap.length * 0.15 + 0.3 }}
               className="mt-8 flex justify-center"
             >
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3">
+              <div className="bg-gradient-to-r from-red-600 to-red-800 text-white px-8 py-4 rounded-2xl font-bold flex items-center gap-3">
                 <span>🎯</span>
                 Ready for Real Interviews!
               </div>
