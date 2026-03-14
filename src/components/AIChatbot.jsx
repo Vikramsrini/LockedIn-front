@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiUrl } from '../services/api';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +36,7 @@ const AIChatbot = () => {
           text: entry.text,
         })),
       });
-      
+
       setMessages(prev => [...prev, { role: 'assistant', text: response.data.reply }]);
     } catch (error) {
       console.error(error);
@@ -46,7 +50,7 @@ const AIChatbot = () => {
     <>
       {/* Floating Action Button */}
       {!isOpen && (
-        <motion.button 
+        <motion.button
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           exit={{ scale: 0 }}
@@ -65,12 +69,12 @@ const AIChatbot = () => {
       {/* Chat Window Popup */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.9, filter: 'blur(10px)' }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
-              scale: 1, 
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
               filter: 'blur(0px)',
               width: isMaximized ? '95vw' : '400px',
               height: isMaximized ? '90vh' : '600px',
@@ -96,8 +100,8 @@ const AIChatbot = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 z-10">
-                <button 
-                  onClick={() => setIsMaximized(!isMaximized)} 
+                <button
+                  onClick={() => setIsMaximized(!isMaximized)}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors text-gray-400"
                   title={isMaximized ? "Restore down" : "Maximize"}
                 >
@@ -111,8 +115,8 @@ const AIChatbot = () => {
                     </svg>
                   )}
                 </button>
-                <button 
-                  onClick={() => setIsOpen(false)} 
+                <button
+                  onClick={() => setIsOpen(false)}
                   className="w-8 h-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-500 hover:text-white transition-colors text-gray-400 font-bold"
                   title="Close"
                 >
@@ -124,11 +128,11 @@ const AIChatbot = () => {
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-gradient-to-b from-transparent to-black/20 custom-scrollbar">
               {messages.map((msg, idx) => (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  key={idx} 
+                  key={idx}
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'assistant' && (
@@ -136,29 +140,58 @@ const AIChatbot = () => {
                       🤖
                     </div>
                   )}
-                  <div className={`max-w-[75%] rounded-2xl px-5 py-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.5)] leading-relaxed ${
-                    msg.role === 'user' 
-                      ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-indigo-500/20' 
+                  <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.5)] leading-relaxed ${msg.role === 'user'
+                      ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-indigo-500/20'
                       : 'bg-black/80 backdrop-blur-sm text-gray-200 border border-white/10 rounded-bl-sm'
-                  }`}>
-                    {msg.text}
+                    }`}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        code({ node, inline, className, children, ...props }) {
+                          const match = /language-(\w+)/.exec(className || '');
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={atomDark}
+                              language={match[1]}
+                              PreTag="div"
+                              className="rounded-lg my-2 text-xs"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={`${className} bg-white/10 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-xs`} {...props}>
+                              {children}
+                            </code>
+                          );
+                        },
+                        p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                        ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+                        ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+                        li: ({ children }) => <li className="mb-1">{children}</li>,
+                        a: ({ children, href }) => <a href={href} className="text-indigo-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>,
+                        blockquote: ({ children }) => <blockquote className="border-l-4 border-indigo-500 pl-4 italic my-2">{children}</blockquote>
+                      }}
+                    >
+                      {msg.text}
+                    </ReactMarkdown>
                   </div>
                 </motion.div>
               ))}
-              
+
               {isTyping && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="flex justify-start items-end"
                 >
-                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 text-xs">
-                      🤖
-                   </div>
-                   <div className="bg-black/80 backdrop-blur-sm text-gray-500 px-4 py-3 rounded-2xl rounded-bl-sm border border-white/10 flex gap-1 items-center h-[44px]">
-                     <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                     <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                     <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></span>
-                   </div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 text-xs">
+                    🤖
+                  </div>
+                  <div className="bg-black/80 backdrop-blur-sm text-gray-500 px-4 py-3 rounded-2xl rounded-bl-sm border border-white/10 flex gap-1 items-center h-[44px]">
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                    <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></span>
+                  </div>
                 </motion.div>
               )}
             </div>
@@ -166,15 +199,15 @@ const AIChatbot = () => {
             {/* Input Area */}
             <div className="p-4 bg-black/40 backdrop-blur-md border-t border-white/10">
               <div className="relative flex items-center">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
                   placeholder="Ask me anything..."
                   className="w-full bg-black/80 border border-white/10 rounded-full pl-5 pr-14 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-gray-300 placeholder-gray-500 font-medium"
                 />
-                <button 
+                <button
                   onClick={sendMessage}
                   disabled={!input.trim() || isTyping}
                   className="absolute right-1.5 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center disabled:opacity-40 disabled:bg-gray-400 hover:bg-indigo-700 hover:scale-105 transition-all shadow-[0_8px_24px_rgba(0,0,0,0.6)] active:scale-95"
@@ -185,7 +218,7 @@ const AIChatbot = () => {
                 </button>
               </div>
               <div className="text-center mt-2">
-                <span className="text-[10px] text-gray-400 font-medium">Responses generated by Open Source AI</span>
+                <span className="text-[10px] text-gray-400 font-medium">Responses generated by meta llama 3.3 70b</span>
               </div>
             </div>
           </motion.div>
