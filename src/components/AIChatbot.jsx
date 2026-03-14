@@ -6,6 +6,27 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import { Clipboard, Check } from 'lucide-react';
+
+const CopyButton = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="absolute top-2 right-2 p-1.5 rounded-md bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all border border-white/10 backdrop-blur-sm z-20 group"
+      title="Copy code"
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Clipboard className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />}
+    </button>
+  );
+};
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,20 +48,72 @@ const AIChatbot = () => {
 
     try {
       const studentData = localStorage.getItem('student_data');
-      const response = await axios.post(apiUrl('/api/chatbot/ask'), {
-        message: userMessage.text,
-        context: 'User is on the main Dashboard.',
-        student_data: studentData ? JSON.parse(studentData) : null,
-        history: nextMessages.map((entry) => ({
-          role: entry.role,
-          text: entry.text,
-        })),
+      
+      // Add a placeholder message for the assistant
+      setMessages(prev => [...prev, { role: 'assistant', text: '' }]);
+
+      const response = await fetch(apiUrl('/api/chatbot/ask'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userMessage.text,
+          context: 'User is on the main Dashboard.',
+          student_data: studentData ? JSON.parse(studentData) : null,
+          history: nextMessages.map((entry) => ({
+            role: entry.role,
+            text: entry.text,
+          })),
+        }),
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', text: response.data.reply }]);
+      if (!response.ok) throw new Error('Failed to connect to AI');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantReply = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === '[DONE]') break;
+            
+            try {
+              const data = JSON.parse(dataStr);
+              if (data.error) throw new Error(data.error);
+              if (data.content) {
+                assistantReply += data.content;
+                // Update the last message in the list
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: 'assistant', text: assistantReply };
+                  return updated;
+                });
+              }
+            } catch (e) {
+              // Partial JSON chunks can happen in streaming
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error(error);
-      setMessages(prev => [...prev, { role: 'assistant', text: 'Oops, I encountered an error connecting to the server.' }]);
+      setMessages(prev => {
+        const updated = [...prev];
+        const last = updated[updated.length - 1];
+        if (last && last.role === 'assistant' && last.text === '') {
+          updated[updated.length - 1] = { role: 'assistant', text: 'Oops, I encountered an error connecting to the server.' };
+        } else {
+          updated.push({ role: 'assistant', text: 'Oops, I encountered an error connecting to the server.' });
+        }
+        return updated;
+      });
     } finally {
       setIsTyping(false);
     }
@@ -149,16 +222,20 @@ const AIChatbot = () => {
                       components={{
                         code({ node, inline, className, children, ...props }) {
                           const match = /language-(\w+)/.exec(className || '');
+                          const codeText = String(children).replace(/\n$/, '');
                           return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={atomDark}
-                              language={match[1]}
-                              PreTag="div"
-                              className="rounded-lg my-2 text-xs"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
+                            <div className="relative group/code">
+                              <CopyButton text={codeText} />
+                              <SyntaxHighlighter
+                                style={atomDark}
+                                language={match[1]}
+                                PreTag="div"
+                                className="rounded-lg my-2 text-xs"
+                                {...props}
+                              >
+                                {codeText}
+                              </SyntaxHighlighter>
+                            </div>
                           ) : (
                             <code className={`${className} bg-white/10 px-1.5 py-0.5 rounded text-indigo-300 font-mono text-xs`} {...props}>
                               {children}
