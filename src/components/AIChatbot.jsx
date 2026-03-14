@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiUrl } from '../services/api';
@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
-import { Clipboard, Check } from 'lucide-react';
+import { Clipboard, Check, Sparkles } from 'lucide-react';
 
 const CopyButton = ({ text }) => {
   const [copied, setCopied] = useState(false);
@@ -36,6 +36,15 @@ const AIChatbot = () => {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -48,7 +57,7 @@ const AIChatbot = () => {
 
     try {
       const studentData = localStorage.getItem('student_data');
-      
+
       // Add a placeholder message for the assistant
       setMessages(prev => [...prev, { role: 'assistant', text: '' }]);
 
@@ -83,11 +92,12 @@ const AIChatbot = () => {
           if (line.startsWith('data: ')) {
             const dataStr = line.slice(6).trim();
             if (dataStr === '[DONE]') break;
-            
+
             try {
               const data = JSON.parse(dataStr);
               if (data.error) throw new Error(data.error);
               if (data.content) {
+                setIsTyping(false); // Hide the "..." indicator when content starts
                 assistantReply += data.content;
                 // Update the last message in the list
                 setMessages(prev => {
@@ -209,13 +219,13 @@ const AIChatbot = () => {
                   className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {msg.role === 'assistant' && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 flex-shrink-0 text-xs">
-                      🤖
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 flex-shrink-0">
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
                     </div>
                   )}
                   <div className={`max-w-[85%] rounded-2xl px-5 py-3 text-sm shadow-[0_4px_12px_rgba(0,0,0,0.5)] leading-relaxed ${msg.role === 'user'
-                      ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-indigo-500/20'
-                      : 'bg-black/80 backdrop-blur-sm text-gray-200 border border-white/10 rounded-bl-sm'
+                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-indigo-500/20'
+                    : 'bg-black/80 backdrop-blur-sm text-gray-200 border border-white/10 rounded-bl-sm'
                     }`}>
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
@@ -261,8 +271,8 @@ const AIChatbot = () => {
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="flex justify-start items-end"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2 text-xs">
-                    🤖
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-900 to-purple-900 border border-indigo-500/30 flex items-center justify-center mr-2">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
                   </div>
                   <div className="bg-black/80 backdrop-blur-sm text-gray-500 px-4 py-3 rounded-2xl rounded-bl-sm border border-white/10 flex gap-1 items-center h-[44px]">
                     <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -271,6 +281,7 @@ const AIChatbot = () => {
                   </div>
                 </motion.div>
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
